@@ -57,7 +57,66 @@ void ImgGetter::searchImg(QNetworkReply *reply)
 
     //<a class="icon-batch-large batch-arrow-left" href="http://cheland-zhilin.tuchong.com/6486801/" rel="prev" title="????"></a>
     //<a class="icon-batch-large batch-arrow-right" href="http://cheland-zhilin.tuchong.com/6486717/" rel="next" title="????"></a></div>
+    QRegExp exp_left("\"icon-batch-large batch-arrow-left\" href=\".+\"", Qt::CaseInsensitive);
+    exp_left.setMinimal(true);
 
+    QRegExp exp_right("\"icon-batch-large batch-arrow-right\" href=\".+\"", Qt::CaseInsensitive);
+    exp_right.setMinimal(true);
+
+    QRegExp hrefExp_sel("http://.+/");
+
+    Href href;
+    switch(cur_direction)
+    {
+    case Href::ORIGNIN:
+        if(exp_left.indexIn(string) >= 0)
+        {
+            if(hrefExp_sel.indexIn(exp_left.cap(0)) >= 0)
+            {
+                qDebug()<<"left----"<<hrefExp_sel.cap(0);
+                href.direction = Href::LEFT;
+                href.href_name = hrefExp_sel.cap(0);
+                m_imgHref.prepend(href);
+            }
+        }
+
+        if(exp_right.indexIn(string) >= 0)
+        {
+            if(hrefExp_sel.indexIn(exp_right.cap(0)) >= 0)
+            {
+                qDebug()<<"right----"<<hrefExp_sel.cap(0);
+                href.direction = Href::RIGHT;
+                href.href_name = hrefExp_sel.cap(0);
+                m_imgHref.prepend(href);
+            }
+        }
+
+        break;
+    case Href::LEFT:
+        if(exp_left.indexIn(string) >= 0)
+        {
+            if(hrefExp_sel.indexIn(exp_left.cap(0)) >= 0)
+            {
+                qDebug()<<"left----"<<hrefExp_sel.cap(0);
+                href.direction = Href::LEFT;
+                href.href_name = hrefExp_sel.cap(0);
+                m_imgHref.prepend(href);
+            }
+        }
+        break;
+    case Href::RIGHT:
+        if(exp_right.indexIn(string) >= 0)
+        {
+            if(hrefExp_sel.indexIn(exp_right.cap(0)) >= 0)
+            {
+                qDebug()<<"right----"<<hrefExp_sel.cap(0);
+                href.direction = Href::RIGHT;
+                href.href_name = hrefExp_sel.cap(0);
+                m_imgHref.prepend(href);
+            }
+        }
+        break;
+    }
 }
 
 void ImgGetter::searchPixmapHome(const QString &string)
@@ -71,6 +130,8 @@ void ImgGetter::searchPixmapHome(const QString &string)
     int count = 0;
 
     state = GET_IMG_HREF;
+
+    Href href;
 
     while(true)
     {
@@ -86,7 +147,9 @@ void ImgGetter::searchPixmapHome(const QString &string)
 
         qDebug()<< "search href "<< hrefExp.cap(0);
         //m_pNetManager->get(QNetworkRequest(QUrl(hrefExp.cap(0))));
-        m_imgHref.append(hrefExp.cap(0));
+        href.href_name = hrefExp.cap(0);
+        href.direction = Href::ORIGNIN;
+        m_imgHref.append(href);
     }
     qDebug()<<"cap cnt "<<count;
 
@@ -95,6 +158,15 @@ void ImgGetter::searchPixmapHome(const QString &string)
 
 void ImgGetter::getHref()
 {
+    static int cnt = 0;
+
+    if(++cnt > 100) //too many pixmap
+    {
+        qDebug() << "too many pixmap";
+        state = GET_LOAD_IMG;
+        emit imgGot();
+    }
+
     if(m_imgHref.isEmpty())
     {
         state = GET_LOAD_IMG;
@@ -103,7 +175,8 @@ void ImgGetter::getHref()
         return;
     }
 
-    m_pNetManager->get(QNetworkRequest(QUrl(m_imgHref.last())));
+    cur_direction = m_imgHref.last().direction;
+    m_pNetManager->get(QNetworkRequest(QUrl(m_imgHref.last().href_name)));
     m_imgHref.removeLast();
 }
 

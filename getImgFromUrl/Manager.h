@@ -5,7 +5,23 @@
 #include <QNetworkAccessManager>
 
 class QNetworkReply;
+#include <QList>
+#include <QString>
 #include <QStringList>
+
+struct Href
+{
+    QString href_name;
+
+    enum DIRECTION
+    {
+        ORIGNIN,
+        RIGHT,
+        LEFT
+    };
+
+    DIRECTION direction;
+};
 
 class ImgGetter : public QObject
 {
@@ -41,10 +57,11 @@ public slots:
 
 private:
 	QNetworkAccessManager *m_pNetManager;
-        QStringList m_imgHref;
+        QList<Href> m_imgHref;
         QStringList m_imgUrlList;
 
         int state;
+        int cur_direction;
 
         enum
         {

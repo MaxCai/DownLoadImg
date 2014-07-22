@@ -85,7 +85,7 @@ def downLoadAllPixmap(url_home):
 	for href in imgHref:
 		imgPage = getImgPage(href)
 		getImgHref(imgPage)
-		max_find = 20
+		max_find = 5
 		left = getLeftUrl(imgPage)
 		for i in range(0, max_find):
 			if left == ' ':
